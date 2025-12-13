@@ -7,11 +7,11 @@ require_once("GeradorCodigoMIPS.php");
 class Compilador {
 
     private Lexico $lexico;
-    private AnalisadorSemantico $semantico;
     private AnalisadorSintaticoAscendenteSLR $sintatico;
-    private ?GeradorCodigoMIPS $gerador;
+    private AnalisadorSemantico $semantico;
+    private ?GeradorCodigoMIPS $gerador = null;
 
-    // Cores ANSI
+    // cores ANSI
     private string $verde = "\033[32m";
     private string $vermelho = "\033[31m";
     private string $amarelo = "\033[33m";
@@ -19,79 +19,62 @@ class Compilador {
 
     public function __construct() {
         $this->lexico = new Lexico();
-        $this->semantico = new AnalisadorSemantico();
         $this->sintatico = new AnalisadorSintaticoAscendenteSLR();
-        $this->gerador = null;
+        $this->semantico = new AnalisadorSemantico();
     }
 
-    public function compilar(string $codigo, string $arquivoSaidaMIPS = "saida.asm") {
+    public function compilar(string $codigo): void {
 
+        /* ===== LÉXICO ===== */
         echo "{$this->amarelo}=== Análise Léxica ==={$this->reset}\n";
         try {
-            $this->lexico->scan($codigo);   
+            $this->lexico->scan($codigo);
         } catch (Exception $e) {
             echo "{$this->vermelho}Erro Léxico: {$e->getMessage()}{$this->reset}\n";
             return;
         }
 
-        $tokens = $this->lexico->getTokens();
-        echo "Tokens encontrados:\n";
-        foreach ($tokens as $token) {
-            echo $token->__toString() . "\n";
+        foreach ($this->lexico->getTokens() as $t) {
+            echo $t . "\n";
         }
 
-        echo "\n{$this->amarelo}=== Análise Sintática e Semântica ==={$this->reset}\n";
+        /* ===== SINTÁTICO ===== */
+        echo "\n{$this->amarelo}=== Análise Sintática ==={$this->reset}\n";
         try {
-            $resultado = $this->sintatico->parser($this->lexico, true); // debug = true para mostrar shifts/reduces
+            $ast = $this->sintatico->parser($this->lexico);
         } catch (Exception $e) {
             echo "{$this->vermelho}Erro Sintático: {$e->getMessage()}{$this->reset}\n";
             return;
         }
 
+        /* ===== SEMÂNTICO ===== */
+        echo "\n{$this->amarelo}=== Análise Semântica ==={$this->reset}\n";
+        $this->semantico->analisar($ast);
+
         if ($this->semantico->hasErrors()) {
-            echo "\n{$this->vermelho}Erros Semânticos encontrados:{$this->reset}\n";
+            echo "{$this->vermelho}Erros Semânticos encontrados:{$this->reset}\n";
             foreach ($this->semantico->getErrors() as $erro) {
-                echo $erro . "\n";
+                echo " - $erro\n";
             }
-            return; 
+            return;
         }
-        
+
         echo "{$this->verde}Compilação sem erros!{$this->reset}\n";
 
-        echo "\n{$this->amarelo}=== Tabela de Símbolos ==={$this->reset}\n";
-        $tabela = $this->semantico->getSymbolTable();
-        if (empty($tabela)) {
-            echo "{$this->amarelo}⚠ AVISO: A tabela de símbolos está vazia!{$this->reset}\n";
-        } else {
-            print_r($tabela);
-        }
-
-        // Geração de código MIPS
+        /* ===== GERADOR MIPS ===== */
         echo "\n{$this->amarelo}=== Gerando Código MIPS ==={$this->reset}\n";
-        $this->gerador = new GeradorCodigoMIPS($tabela);
 
-        foreach ($tabela as $nome => $simbolo) {
-            if (isset($simbolo->meta['valor'])) {
-                $this->gerador->gerarAtribuicao($nome, $simbolo->meta['valor']);
-            }
-        }
+        $this->gerador = new GeradorCodigoMIPS(
+            $this->semantico->getSymbolTable()
+        );
 
-        $this->gerador->finalizar();
-        $this->gerador->salvar($arquivoSaidaMIPS);
+        // AST é a entrada do gerador
+        $this->gerador->gerar($ast);
 
-        echo "{$this->verde}Código MIPS gerado e salvo em '{$arquivoSaidaMIPS}'{$this->reset}.\n";
-    }
+        $codigoMIPS = $this->gerador->getCode();
 
-    public function getCodigoMIPS(): ?string {
-        return $this->gerador?->getCodigo();
+        echo "{$this->verde}Código MIPS gerado com sucesso!{$this->reset}\n";
+        echo "\n=== Código MIPS ===\n";
+        echo $codigoMIPS;
     }
 }
-
-// Exemplo de uso
-$codigo = <<<COD
-int x;
-x = 10;
-COD;
-
-$compilador = new Compilador();
-$compilador->compilar($codigo);

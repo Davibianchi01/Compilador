@@ -1,5 +1,8 @@
 <?php
-require_once("Lexico.php");
+require_once "Lexico.php";
+require_once "AnalisadorSintaticoAscendenteSintatico.php";
+require_once "AnalisadorSemantico.php";
+require_once "GeradorCodigoMIPS.php";
 
 $codigo = "
 if (a > 10) {
@@ -7,16 +10,21 @@ if (a > 10) {
 }
 ";
 
-// Cria o léxico
+//Lexico
 $lexico = new Lexico();
-
-// Analisa o código
 $lexico->scan($codigo);
-
-// Pega todos os tokens
 $tokens = $lexico->getTokens();
 
-// Imprime cada token
-foreach ($tokens as $t) {
-    echo $t . "\n";
-}
+//Sintatico
+$parser = new Sintatico($tokens);
+$ast = $parser->parse();
+
+//Semantico
+$semantico = new AnalisadorSemantico();
+$tabelaSimbolos = $semantico->analisar($ast);
+
+//Gerador MIPS
+$gerador = new GeradorCodigoMIPS($tabelaSimbolos);
+$gerador->gerar($ast);
+
+echo $gerador->getCode();
