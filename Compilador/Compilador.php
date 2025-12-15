@@ -4,14 +4,21 @@ require_once("AnalisadorSintaticoAscendenteSLR.php");
 require_once("AnalisadorSemantico.php");
 require_once("GeradorCodigoMIPS.php");
 
+/*Classe principal Compilador - Responsável por coordenar todas as fases do compilador:
+ *  - Análise Léxica
+ *  - Análise Sintática
+ *  - Análise Semântica
+ *  - Geração de Código MIPS
+ */
+
 class Compilador {
 
 private Lexico $lexico;
 private AnalisadorSintaticoAscendenteSLR $sintatico;
 private SemanticAnalyzer $semantico;  
-private ?GeradorCodigoMIPS $gerador = null;
+private GeradorCodigoMIPS $gerador;
 
-    // cores ANSI para terminal
+    //Cores ANSI para terminal
     private string $verde = "\033[32m";
     private string $vermelho = "\033[31m";
     private string $amarelo = "\033[33m";
@@ -26,10 +33,10 @@ private ?GeradorCodigoMIPS $gerador = null;
     public function compilar(string $codigo): void {
         echo ">>> Iniciando compilação\n";
 
-        // Normalizar quebras de linha para Linux (\n)
+        //Normalizar quebras de linha
         $codigo = str_replace("\r", "", $codigo);
 
-        // ===== ANÁLISE LÉXICA =====
+        //ANÁLISE LÉXICA 
         echo "\n{$this->amarelo}=== Análise Léxica ==={$this->reset}\n";
         try {
             $this->lexico->scan($codigo);
@@ -43,7 +50,7 @@ private ?GeradorCodigoMIPS $gerador = null;
             echo $t . "\n";
         }
 
-        // ===== ANÁLISE SINTÁTICA =====
+        //ANÁLISE SINTÁTICA
         echo "\n{$this->amarelo}=== Análise Sintática ==={$this->reset}\n";
         try {
             $ast = $this->sintatico->parser($this->lexico);
@@ -53,7 +60,7 @@ private ?GeradorCodigoMIPS $gerador = null;
         }
         echo "Análise sintática finalizada.\n";
 
-        // ===== ANÁLISE SEMÂNTICA =====
+        //ANÁLISE SEMÂNTICA
         echo "\n{$this->amarelo}=== Análise Semântica ==={$this->reset}\n";
         $this->semantico->analisar($ast);
 
@@ -66,7 +73,7 @@ private ?GeradorCodigoMIPS $gerador = null;
         }
         echo "{$this->verde}Semântica OK!{$this->reset}\n";
 
-        // ===== GERAÇÃO DE CÓDIGO MIPS =====
+        //GERAÇÃO DE CÓDIGO MIPS
         echo "\n{$this->amarelo}=== Gerando Código MIPS ==={$this->reset}\n";
 
         if (!is_array($ast)) {
@@ -83,14 +90,14 @@ private ?GeradorCodigoMIPS $gerador = null;
         echo "\n=== Código MIPS ===\n";
         echo $codigoMIPS;
 
-        // ===== SALVAR EM ARQUIVO PARA MARS =====
+        //SALVAR EM ARQUIVO PARA MARS 
         file_put_contents("saida.asm", $codigoMIPS);
         echo "\n\nArquivo 'saida.asm' criado com sucesso para abrir no MARS.\n";
         echo "\n>>> Fim da compilação\n";
     }
 }
 
-// ================= EXEMPLO DE USO =================
+//Exemplo de uso
 $codigoExemplo = "
 if (a > 10) {
     b = 'oi';

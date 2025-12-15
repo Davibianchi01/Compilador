@@ -15,7 +15,7 @@ class SemanticActions {
             'token' => $tok,
             'lexeme' => $lexeme,
             'line' => $line,
-            'pos' => pos
+            'pos' => $pos,
         ];
     }
 

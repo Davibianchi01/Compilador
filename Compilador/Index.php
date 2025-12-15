@@ -10,7 +10,7 @@ $saida = "";
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $codigo = $_POST['codigo'] ?? "";
 
-    ob_start(); // captura echo
+    ob_start(); 
     try {
         $compilador = new Compilador();
 

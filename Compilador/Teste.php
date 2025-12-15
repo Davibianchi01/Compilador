@@ -12,7 +12,7 @@ int a = 11;
 string b;
 
 if (a > 10) {
-    b = "oi";
+    b = 'oi';
 }
 ";
 
