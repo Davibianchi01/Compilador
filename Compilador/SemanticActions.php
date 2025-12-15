@@ -1,5 +1,8 @@
-<?php
+<?php 
 class SemanticActions {
+     //Esta classe funciona como um “intermediário” entre o (Analisador Sintático) e o (Analisador Semântico)
+     //Sempre que o Sintatico faz um Shift ou um Reduce, os métodos desta classe são chamados para executar as ações semânticas 
+
     private $sem;
 
     public function __construct(SemanticAnalyzer $sem) {

@@ -139,70 +139,71 @@
             $this->estado = "q0";
             $this->lexema = "";
         }
-        public function scan(string $input)
-        {  
-             echo ">> Léxico iniciado\n";
+ public function scan(string $input)
+{
+    echo ">> Léxico iniciado\n";
 
-            $input = str_replace("\r", "", $input); // remove todos os \r
-$linhas = explode("\n", $input);
-
-
- foreach ($linhas as $linha) {
+    $input = str_replace("\r", "", $input);
+    $this->line = 1;
     $this->column = 1;
+    $this->estado = "q0";
+    $this->lexema = "";
+
     $i = 0;
-    
-    while ($i < strlen($linha)) {
+    $len = strlen($input);
 
-$c = $linha[$i];
+    while ($i < $len) {
+        $c = $input[$i];
 
-// trata espaço como delimitador universal
-while ($i < strlen($linha)) {
-
-    $c = $linha[$i];
-
-    // existe transição no AFD?
-    if (isset($this->afd[$this->estado][$c])) {
-
-        // avança no autômato
-        $this->estado = $this->afd[$this->estado][$c];
-        $this->lexema .= $c;
-
-        $i++;
-        $this->column++;
-    }
-    else {
-        // tenta finalizar token
-        if (isset($this->finais[$this->estado])) {
-            $this->emitirTokenFinal();
-            // NÃO incrementa $i (reprocessa o caractere)
-        }
-        else {
-            throw new Exception(
-                "Erro Léxico: caractere inválido '".htmlspecialchars($c)
-                ."' na linha {$this->line}, coluna {$this->column}"
-            );
-        }
-    }
+if ($c === ' ' || $c === "\t") {
+    $i++;
+    $this->column++;
+    continue;
 }
 
-    }
-    if (isset($this->finais[$this->estado])) {
-    $this->emitirTokenFinal();
-}
-
-                $this->line++;
-            }
-
+        // controle de linha
+        if ($c === "\n") {
             if (isset($this->finais[$this->estado])) {
                 $this->emitirTokenFinal();
             }
-
-            $this->tokens[] = new Token("$", "$", $this->line, 1);
-            echo ">> Tokens gerados:\n";
-            foreach ($this->tokens as $tk) {
-            echo $tk . PHP_EOL;
-            }
+            $this->line++;
+            $this->column = 1;
+            $i++;
+            continue;
         }
+
+        // existe transição no AFD?
+        if (isset($this->afd[$this->estado][$c])) {
+            $this->estado = $this->afd[$this->estado][$c];
+            $this->lexema .= $c;
+            $i++;
+            $this->column++;
+        }
+        else {
+          if (isset($this->finais[$this->estado])) {
+                $this->emitirTokenFinal();
+                  continue; 
+              } else {
+            throw new Exception(
+            "Erro Léxico: caractere inválido '$c' na linha {$this->line}, coluna {$this->column}"
+          );
+     }
+    }
+    }
+
+    // final do arquivo
+    if (isset($this->finais[$this->estado])) {
+        $this->emitirTokenFinal();
+    }
+
+    $this->tokens[] = new Token("$", "$", $this->line, $this->column);
+
+    echo ">> Tokens gerados:\n";
+    foreach ($this->tokens as $tk) {
+        echo $tk . PHP_EOL;
+    }
+}
+
 
         public function nextToken()
         {

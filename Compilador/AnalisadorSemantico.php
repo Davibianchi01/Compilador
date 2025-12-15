@@ -56,7 +56,6 @@ class SemanticAnalyzer {
     public function enterScope() { $this->symtab->enterScope(); }
     public function leaveScope() { $this->symtab->leaveScope(); }
 
-
     //Declaração de variável com validação de palavras reservadas
     public function declareVariable(string $name, string $type, $line = null, $col = null) {
         if (in_array(strtoupper($name), $this->reservedWords)) {
@@ -88,7 +87,6 @@ class SemanticAnalyzer {
         }
         return $sym;
     }
-
 
     //Validação de atribuição
     public function checkAssignment(string $lhsName, $rhsTypeOrSymbol, $line = null, $col = null) {

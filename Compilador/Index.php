@@ -13,6 +13,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     ob_start(); // captura echo
     try {
         $compilador = new Compilador();
+
+        // Executa o processo completo de compilação
+        // (léxico → sintático → semântico → geração de código)
+
         $compilador->compilar($codigo);
     } catch (Throwable $e) {
         echo "Erro: " . $e->getMessage();
@@ -32,19 +36,15 @@ pre { background: #f8f8f8; padding: 10px; }
 </style>
 </head>
 <body>
-
 <h1>Compilador PHP - Analisador LR</h1>
-
 <form method="post">
 <textarea name="codigo" rows="10"><?= htmlspecialchars($_POST['codigo'] ?? '') ?></textarea>
 <br>
 <input type="submit" value="Analisar">
 </form>
-
 <?php if ($saida): ?>
 <h2>Saída</h2>
 <pre><?= htmlspecialchars($saida) ?></pre>
 <?php endif; ?>
-
 </body>
 </html>

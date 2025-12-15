@@ -1,5 +1,7 @@
 <?php
 class AnalisadorSintaticoAscendenteSLR {
+    //Implementa um analisador sintático ascendente do tipo SLR - Responsável por: Consumir tokens do Lexico / Verificar se a sequência de tokens segue a gramática
+    
     function parser(Lexico $lexico, $debug = false): bool {
 
         echo "=== Início do parser SLR ===\n";
